@@ -16,31 +16,37 @@ var connection = mysql.createConnection(
 var start = function() {
 	connection.connect(function(err) {
 	if (err) throw err;
-});
+	});
 
  prompt([{
     name: "menu",
     type: "rawlist",
     message: "Please select the screen you would like to view: ",
-    choices: ["View product sales by department", "Create new department"]
+    choices: ["View sales by department", "Create new department"]
   }]).then(function(answer) {
 
-  	if(answer.menu.toLowerCase() === "View product sales by department") {
-  		//View dept sales
-  		connection.query("SELECT dept_id, dept_name, total_sales FROM departments GROUP BY dept_id"), function(err, res) {
-  			if(err) throw err;
-
-  			console.log("*************************************************************************************************");
-  			for(var i = 0; i < res.length; i++) {
-  				console.log("Dept # : "+res[i].dept_id+" | Dept Desc : "+res[i].dept_name+" | Total Sales : $"+res[i].total_sales);	
-			}
-			console.log("*************************************************************************************************");
-  			}
+  	if(answer.menu.toLowerCase() === "view sales by department") {
+  		dispDept();
   		}
   	else {
-  		deptCreate();
+		deptCreate();  		
   	}
+
   });
+
+var dispDept = function() {
+
+	console.log("*************************************************************************************************");
+	connection.query("SELECT * FROM departments", function(err, res) {
+  			if(err) throw err;
+ 			
+  			for(var i = 0; i < res.length; i++) {
+  				console.log("Dept # : "+res[i].dept_id+" | Dept Desc : "+res[i].dept_name+" | Total Sales : $"+res[i].total_sales);	
+			}	
+			console.log("*************************************************************************************************");
+  		});
+  	
+	};
 
 var deptCreate = function () {
 	prompt([{
@@ -59,11 +65,19 @@ var deptCreate = function () {
 			name: "newOverhead"
 		}
 		]). then(function(answer) {
-			connection.query("INSERT INTO departments (dept_id, dept_name, costs, total_sales) VALUES ("+answer.newID+","+answer.newDept+","+answer.newOverhead+", 0.00)"),function(err, res) {
-				console.log("New department "+answer.deptName+" created!");
+			connection.query("INSERT INTO departments SET ?", 
+				{
+					dept_id: answer.newID, 
+					dept_name: answer.newDept, 
+					costs: answer.newOverhead, 
+					total_sales: 0
+				}), function(err, res) {
+				if(err) throw err;
+
+				console.log("New department "+answer.newDept+" created!");
 				};
 			});
-	}
-}
+	};
+};
 
 start();
